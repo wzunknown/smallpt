@@ -2,3 +2,7 @@
 *.png
 *.jpg
 mysmallpt
+.vscode
+*.o
+core
+/obj
