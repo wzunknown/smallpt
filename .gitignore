@@ -2,7 +2,9 @@
 *.png
 *.jpg
 mysmallpt
+demo
 .vscode
 *.o
 core
 /obj
+/test
