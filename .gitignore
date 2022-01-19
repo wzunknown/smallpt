@@ -1,10 +1,10 @@
 *.ppm
 *.png
 *.jpg
-mysmallpt
-demo
 .vscode
 *.o
 core
 /obj
 /test
+/mysmallpt
+/demo
