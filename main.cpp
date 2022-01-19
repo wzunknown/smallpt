@@ -7,6 +7,7 @@
 #include <random>
 #include <math.h>
 #include <fstream>
+#include <omp.h>
 
 
 
@@ -21,17 +22,29 @@ double urand() {
 
 
 
+// std::vector<Sphere> spheres {
+//     // Scene: radius, center, emission, color, refl type, trans type, n, absorp
+//     Sphere(1e5, Vec(1e5 + 1, 40.8, 81.6), Color(), Color(.75, .25, .25), SurfaceType::DIFFUSE, SurfaceType::NONE),   // Left
+//     Sphere(1e5, Vec(-1e5 + 99, 40.8, 81.6), Color(), Color(.25, .25, .75), SurfaceType::DIFFUSE, SurfaceType::NONE), // Rght
+//     Sphere(1e5, Vec(50, 40.8, 1e5), Color(), Color(.75, .75, .75), SurfaceType::DIFFUSE, SurfaceType::NONE),         // Back
+//     Sphere(1e5, Vec(50, 40.8, -1e5 + 170), Color(), Color(), SurfaceType::DIFFUSE, SurfaceType::NONE),               // Frnt
+//     Sphere(1e5, Vec(50, 1e5, 81.6), Color(), Color(.75, .75, .75), SurfaceType::DIFFUSE, SurfaceType::NONE),         // Botm
+//     Sphere(1e5, Vec(50, -1e5 + 81.6, 81.6), Color(), Color(.75, .75, .75), SurfaceType::DIFFUSE, SurfaceType::NONE), // Top
+//     Sphere(16.5, Vec(27, 16.5, 47), Color(), Color(1, 1, 1) * .999, SurfaceType::NORMAL, SurfaceType::NORMAL, -1.0),        // Mirr
+//     Sphere(16.5, Vec(73, 16.5, 78), Color(), Color(1, 1, 1) * .999, SurfaceType::NORMAL, SurfaceType::NORMAL, 1.3, Vec(0.01, 0.09, 0.03)),        // Glas
+//     Sphere(600, Vec(50, 681.6 - .27, 81.6), Color(3,3,3), Color(), SurfaceType::DIFFUSE, SurfaceType::NONE)     // Lite
+// };
 std::vector<Sphere> spheres {
     // Scene: radius, center, emission, color, refl type, trans type, n, absorp
-    Sphere(1e5, Vec(1e5 + 1, 40.8, 81.6), Color(), Color(.75, .25, .25), SurfaceType::DIFFUSE, SurfaceType::NONE),   // Left
-    Sphere(1e5, Vec(-1e5 + 99, 40.8, 81.6), Color(), Color(.25, .25, .75), SurfaceType::DIFFUSE, SurfaceType::NONE), // Rght
-    Sphere(1e5, Vec(50, 40.8, 1e5), Color(), Color(.75, .75, .75), SurfaceType::DIFFUSE, SurfaceType::NONE),         // Back
-    Sphere(1e5, Vec(50, 40.8, -1e5 + 170), Color(), Color(), SurfaceType::DIFFUSE, SurfaceType::NONE),               // Frnt
-    Sphere(1e5, Vec(50, 1e5, 81.6), Color(), Color(.75, .75, .75), SurfaceType::DIFFUSE, SurfaceType::NONE),         // Botm
-    Sphere(1e5, Vec(50, -1e5 + 81.6, 81.6), Color(), Color(.75, .75, .75), SurfaceType::DIFFUSE, SurfaceType::NONE), // Top
-    Sphere(16.5, Vec(27, 16.5, 47), Color(), Color(1, 1, 1) * .999, SurfaceType::NORMAL, SurfaceType::NORMAL, -1.0),        // Mirr
-    Sphere(16.5, Vec(73, 16.5, 78), Color(), Color(1, 1, 1) * .999, SurfaceType::NORMAL, SurfaceType::NORMAL, 1.3, Vec(0.01, 0.09, 0.03)),        // Glas
-    Sphere(600, Vec(50, 681.6 - .27, 81.6), Color(3,3,3), Color(), SurfaceType::DIFFUSE, SurfaceType::NONE)     // Lite
+    Sphere(1e5, Vec(1e5 + 1, 40.8, 81.6), Color(), Color(0.623, 0.521, 0.438), SurfaceType::DIFFUSE, SurfaceType::NONE),   // Left
+    Sphere(1e5, Vec(-1e5 + 99, 40.8, 81.6), Color(), Color(0.572, 0.616, 1.035), SurfaceType::DIFFUSE, SurfaceType::NONE), // Rght
+    Sphere(1e5, Vec(50, 40.8, 1e5), Color(), Color(0.543, 0.571, 0.622), SurfaceType::DIFFUSE, SurfaceType::NONE),         // Back
+    Sphere(1e5, Vec(50, 40.8, -1e5 + 170), Color(), Color(0.543, 0.571, 0.622), SurfaceType::DIFFUSE, SurfaceType::NONE),               // Frnt
+    Sphere(1e5, Vec(50, 1e5, 81.6), Color(), Color(0.543, 0.571, 0.622), SurfaceType::DIFFUSE, SurfaceType::NONE),         // Botm
+    Sphere(1e5, Vec(50, -1e5 + 81.6, 81.6), Color(), Color(0.543, 0.571, 0.622), SurfaceType::DIFFUSE, SurfaceType::NONE), // Top
+    Sphere(16.5, Vec(27, 16.5, 47), Color(), Color(1, 1, 1) * .999, SurfaceType::NORMAL, SurfaceType::NORMAL, -0.7),        // Mirr
+    Sphere(16.5, Vec(73, 16.5, 78), Color(), Color(1, 1, 1) * .999, SurfaceType::NORMAL, SurfaceType::NORMAL, 1.3, Vec(0.002, 0.01, 0.003)),        // Glas
+    Sphere(600, Vec(50, 681.6 - .27, 81.6), Color(4, 4, 4), Color(), SurfaceType::DIFFUSE, SurfaceType::NONE)     // Lite
 };
 
 
@@ -104,7 +117,7 @@ Color radiance(const Ray& ray, int depth, Vec absorp) {
 
 
     // transmission
-    if (obj.surf_tran == SurfaceType::NORMAL) {
+    if (obj.surf_tran == SurfaceType::NORMAL && obj.n_refr > 0) {
         double n_rel = is_in ? obj.n_refr : 1.0 / obj.n_refr;
         double sin_t = sqrt(1 - cos_i * cos_i) / n_rel;
         if (sin_t < 1) {
@@ -139,23 +152,24 @@ int main(int argc, char* argv[]) {
 
     // samples
     std::vector<int> grid {2, 2};
-    int samples = argc == 2? atoi(argv[1]) / (grid[0] * grid[1]) : 1;
+    int total_grid = grid[0] * grid[1];
+    int samples = argc == 2? atoi(argv[1]) / total_grid : 1;
 
     // camera setup
-    Ray camera(Vec(50, 52, 295.6), Vec(0, -0.042612, -1));
+    Ray camera(Vec(50, 15, 280.6), Vec(0, 0.15, -1));
     Vec cam_x = Vec(0.5135 / height);
     Vec cam_y = (cam_x % camera.direction).normalize() * 0.5135 / height;
 
 
     // Monte Carlo process
-    Color temp_color;
-#pragma omp parallel for schedule(dynamic, 1) private(temp_color)    
+    // Color temp_color;
+#pragma omp parallel for schedule(dynamic, 1)   
     for (int y = 0; y < height; ++y) {
-        if (y % (height / 50) == 0) {
-            fprintf(stderr, "\rRendering (%d spp): %4.2f%%", samples * grid[0] * grid[1], 100.0 * y / height);
-        }
+        // if (y % (height / 50) == 0) {
+        fprintf(stderr, "\rRendering (%d spp): %4.2f%%", samples * total_grid, 100.0 * y / height);
+        // }
         for (int x = 0; x < width; ++x) {
-            temp_color = Color();
+            Color temp_color = Color();
             for (int sy = 0; sy < grid[1]; ++sy) {
                 for (int sx = 0; sx < grid[0]; ++sx) {
                     for (int samp = 0; samp < samples; ++samp) {
@@ -166,15 +180,15 @@ int main(int argc, char* argv[]) {
                         rand = urand() * 2;
                         double dy = rand < 1 ? sqrt(rand) - 1 : 1 - sqrt(2 - rand);
 
-                        Vec dir = cam_x * (x + (sx + dx) / 2 - width / 2.0)
-                                    + cam_y * (y + (sy + dy) / 2 - height / 2.0)
+                        Vec dir = cam_x * (x + (sx + dx  - grid[0] / 2.) / 2. - width / 2.)
+                                    + cam_y * (y + (sy + dy - grid[1] / 2.) / 2. - height / 2.)
                                     + camera.direction;
                         // dir.show();
                         
                         temp_color += radiance(Ray(camera.origin + 140 * dir, dir), 0, air_absorp) * (1.0 / samples);
                     }
                     // temp_color.show();
-                    canvas[x][y] += temp_color * 0.25;
+                    canvas[x][y] += temp_color / total_grid;
                 }
             }
         }

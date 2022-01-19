@@ -61,8 +61,11 @@ public:
 double Fresnel_reflection(double n, double cos_i) {
     double sin_i = sqrt(1 - cos_i * cos_i);
     double sin_t = sin_i / n; // angle of refraction
-    if (sin_t > 1 || n < 0) { // total reflection or specular reflection
+    if (sin_t > 1) { // total reflection or specular reflection
         return 1; 
+    }
+    if (n < 0) {
+        return -n;
     }
     // double cos_i = sqrt(1 - sin_i * sin_i);
     double cos_t = sqrt(1 - sin_t * sin_t);
