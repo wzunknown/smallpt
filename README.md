@@ -13,3 +13,7 @@ make clean && make
 # or use default.yaml as default
 ./mysmallpt
 ```
+
+50000spp:
+
+<img src="img/image50000.png" width="512">
