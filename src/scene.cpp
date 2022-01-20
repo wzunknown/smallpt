@@ -1,7 +1,7 @@
 #include "scene.h"
 #include <cmath>
 #include <stdexcept>
-#include <yaml-cpp/yaml.h>
+#include "yaml-cpp/yaml.h"
 
 /**
  * @brief 

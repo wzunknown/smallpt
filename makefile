@@ -1,5 +1,6 @@
 ifeq ($(OS),Windows_NT) 
 	detected_OS := Windows
+	$(info DO NOT SUPPORT WINDOWS)
 else
 	detected_OS := $(shell sh -c 'uname 2>/dev/null || echo Unknown')
 endif
@@ -17,7 +18,7 @@ else ifeq ($(detected_OS),Linux)
 	LDFLAGS=-lyaml-cpp
 endif
 
-CPPFLAGS=-Iinclude -std=c++17
+CPPFLAGS=-Iinclude -std=c++11
 
 SRC_DIR=src
 OBJ_DIR=obj
@@ -35,13 +36,13 @@ all: $(EXE)
 png: $(EXE) image.ppm
 	convert image.ppm image.png
 
-mysmallpt: mysmallpt.o $(OBJ)
+mysmallpt: app/mysmallpt.o $(OBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
-demo: demo.o $(OBJ_DIR)/vector.o $(OBJ_DIR)/sphere.o $(OBJ_DIR)/color.o
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+# demo: demo.o $(OBJ_DIR)/vector.o $(OBJ_DIR)/sphere.o $(OBJ_DIR)/color.o
+# 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
-%.o: %.cpp
+app/mysmallpt.o: app/mysmallpt.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@ $(LDFLAGS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
@@ -52,4 +53,4 @@ $(OBJ_DIR):
 
 .PHONY: clean
 clean:
-	-rm -rf *.o mysmallpt *.ppm *.png *.jpg $(OBJ)
+	-rm -rf app/mysmallpt.o mysmallpt *.ppm *.png *.jpg $(OBJ)

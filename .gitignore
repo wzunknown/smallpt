@@ -8,4 +8,5 @@ core
 /test
 /mysmallpt
 /demo
+/build
 !/img/*
