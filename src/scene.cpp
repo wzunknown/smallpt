@@ -132,10 +132,13 @@ Color Scene::radiance(const Ray& ray, int depth, Vec absorp) {
 }
 
 
-int Scene::render_raw(int xmin, int xmax, int ymin, int ymax) {
+int Scene::render_raw(int xmin, int xmax, int ymin, int ymax, std::vector<double>& data_raw) {
     // canvas
-    canvas = std::vector<std::vector<Color>>(width, std::vector<Color>(height, Color()));
+    int X = xmax - xmin;
+    int Y = ymax - ymin;
     int total_grid = grid[0] * grid[1];
+    int samples = samples_per_pixel / total_grid;
+
 
     // default camera setup
     Vec cam_x = Vec(fov / height);
@@ -144,14 +147,11 @@ int Scene::render_raw(int xmin, int xmax, int ymin, int ymax) {
     // Monte Carlo process
 #pragma omp parallel for ordered schedule(dynamic, 1)   
     for (int y = ymin; y < ymax; ++y) {
-        // if (y % (height / 50) == 0) {
-        fprintf(stderr, "\rRendering (%d spp): %4.2f%%", samples_per_pixel * total_grid, 100.0 * y / height);
-        // }
         for (int x = xmin; x < xmax; ++x) {
             Color temp_color = Color();
             for (int sy = 0; sy < grid[1]; ++sy) {
                 for (int sx = 0; sx < grid[0]; ++sx) {
-                    for (int samp = 0; samp < samples_per_pixel; ++samp) {
+                    for (int samp = 0; samp < samples; ++samp) {
                         // tent filter
                         double rand;
                         rand = urand() * 2;
@@ -167,12 +167,12 @@ int Scene::render_raw(int xmin, int xmax, int ymin, int ymax) {
                         temp_color += radiance(Ray(camera.origin + camera_length * dir, dir), 0, air_absorp) * (1.0 / samples_per_pixel);
                     }
                     // temp_color.show();
-                    canvas[x][y] += temp_color / total_grid;
                 }
             }
-            // for (int idx = 0; idx < 3; ++idx) {
-            //     canvas[x][y][idx] *= exp(-camera_length * air_absorp[idx]);
-            // }
+            int idx = (y - ymin) * X * 3 + (x - xmin) * 3;
+            data_raw[idx] = temp_color.x;
+            data_raw[idx + 1] = temp_color.y;
+            data_raw[idx + 2] = temp_color.z;
         }
     }
     return 0;    
@@ -193,7 +193,7 @@ int Scene::render() {
 #pragma omp parallel for ordered schedule(dynamic, 1)   
     for (int y = 0; y < height; ++y) {
         // if (y % (height / 50) == 0) {
-        fprintf(stderr, "\rRendering (%d spp): %4.2f%%", samples * total_grid, 100.0 * y / height);
+        fprintf(stderr, "\rRendering (%d spp): %4.2f%%", samples_per_pixel, 100.0 * y / height);
         // }
         for (int x = 0; x < width; ++x) {
             Color temp_color = Color();
@@ -212,12 +212,12 @@ int Scene::render() {
                                     + camera.direction;
                         // dir.show();
                         
-                        temp_color += radiance(Ray(camera.origin + camera_length * dir, dir), 0, air_absorp) * (1.0 / samples);
+                        temp_color += radiance(Ray(camera.origin + camera_length * dir, dir), 0, air_absorp) * (1.0 / samples_per_pixel);
                     }
                     // temp_color.show();
-                    canvas[x][y] += temp_color / total_grid;
                 }
             }
+            canvas[x][y] = temp_color;
             // for (int idx = 0; idx < 3; ++idx) {
             //     canvas[x][y][idx] *= exp(-camera_length * air_absorp[idx]);
             // }

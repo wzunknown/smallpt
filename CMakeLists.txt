@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(mysmallpt VERSION 0.1)
+project(smallpt-scene VERSION 0.1)
 
+
+option(USE_LOCAL_YAML_CPP "use user-installed yaml-cpp library" OFF)
+
+###### --std=c++11
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
@@ -16,17 +20,19 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 ####### main part
-file(GLOB SRC_FILE src/*.cpp)
-# set(SRC_FILE src/color.cpp src/scene.cpp src/sphere.cpp src/vector.cpp)
+file(GLOB SMALLPT_SRC ${PROJECT_SOURCE_DIR}/src/*.cpp)
+# set(SMALLPT_SRC src/color.cpp src/scene.cpp src/sphere.cpp src/vector.cpp)
 
-add_executable(${PROJECT_NAME} app/mysmallpt.cpp ${SRC_FILE})
+configure_file(${CMAKE_SOURCE_DIR}/default.yaml ${CMAKE_BINARY_DIR}/default.yaml COPYONLY)
 
-target_include_directories(${PROJECT_NAME} 
+add_library(smallpt-scene STATIC ${SMALLPT_SRC})
+
+target_include_directories(smallpt-scene
     PRIVATE 
-        include
+        ${PROJECT_SOURCE_DIR}/include
 )
 
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(smallpt-scene
     PRIVATE
         yaml-cpp
 )
@@ -35,12 +41,12 @@ target_link_libraries(${PROJECT_NAME}
 # find_package(OpenMP)
 find_package(OpenMP COMPONENTS CXX)
 if (OPENMP_FOUND)
-    target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-    OpenMP::OpenMP_CXX
+    target_link_libraries(smallpt-scene
+        PRIVATE
+            OpenMP::OpenMP_CXX
     )
 else()
-    message(STATUS "Not found OpenMP for cxx, process will be slow")
+    message(STATUS "Not found OpenMP for cxx, program will be slow")
 endif()
 # if (OPENMP_FOUND)
 #     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -48,15 +54,16 @@ endif()
 #     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 # endif()
 
-find_library(YAML_CPP_LIBRARY NAMES yaml-cpp)
-# find_library(LIB)
+if (USE_LOCAL_YAML_CPP)
+    find_library(YAML_CPP_LIBRARY NAMES yaml-cpp)
+endif()
 if (YAML_CPP_LIBRARY)
     message(STATUS "Found libyaml-cpp")
 else()
     message(STATUS "Not found yaml-cpp, will build from source in lib/yaml-cpp")
-    add_subdirectory(lib)
+    add_subdirectory(${PROJECT_SOURCE_DIR}/lib)
 endif()
 
-# add_subdirectory(src)
+add_subdirectory(app)
 
 
