@@ -1,15 +1,19 @@
 # smallpt
 rewrite https://www.kevinbeason.com/smallpt/
 
-requirements:
+## build
 ```bash
-sudo apt install libyaml-cpp-dev # https://github.com/jbeder/yaml-cpp
+mkdir build && cd build
+cmake .. && make
+# or build yaml-cpp as shared library
+cmake -DBUILD_SHARED_LIBS=ON .. && make
 ```
 
-usage:
+## usage
 ```bash
-make clean && make
-./mysmallpt config.yaml
-# or use default.yaml as default
-./mysmallpt
+./mysmallpt path_to_config.yaml
 ```
+
+50000spp:
+
+<img src="img/image50000.png" width="512">

@@ -1,7 +1,7 @@
 #include "scene.h"
 #include <cmath>
 #include <stdexcept>
-#include <yaml-cpp/yaml.h>
+#include "yaml-cpp/yaml.h"
 
 /**
  * @brief 
@@ -16,9 +16,6 @@ double Fresnel_reflection(double n, double cos_i) {
     if (sin_t > 1) { // total reflection or specular reflection
         return 1; 
     }
-    if (n < 0) {
-        return -n;
-    }
     // double cos_i = std::sqrt(1 - sin_i * sin_i);
     double cos_t = std::sqrt(1 - sin_t * sin_t);
     double rs = (cos_i - n * cos_t) / (cos_i + n * cos_t);
@@ -29,28 +26,9 @@ double Fresnel_reflection(double n, double cos_i) {
 }
 
 
-// double Fresnel_reflection(double n, double sin_i) {
-//     double sin_t = sin_i / n; // angle of refraction
-//     if (sin_t > 1 || n < 0) { // total reflection or specular reflection
-//         return 1; 
-//     }
-//     double cos_i = std::sqrt(1 - sin_i * sin_i);
-//     double cos_t = std::sqrt(1 - sin_t * sin_t);
-//     double rs = (cos_i - n * cos_t) / (cos_i + n * cos_t);
-//     rs *= rs;
-//     double rp = (cos_t - n * cos_i) / (cos_t + n * cos_i);
-//     rp *= rp;
-//     return (rs + rp) / 2;
-// }
-
-
 double Fresnel_transmission(double n, double cos_i) {
     return 1 - Fresnel_reflection(n, cos_i);
 }
-
-// double Fresnel_transmission(double n, double sin_i) {
-//     return 1 - Fresnel_reflection(n, sin_i);
-// }
 
 
 
@@ -90,14 +68,6 @@ Color Scene::radiance(const Ray& ray, int depth, Vec absorp) {
     }
     const Sphere& obj = spheres[id];
 
-    // fprintf(stderr, "depth: %d, id: %zu, t: %f\n", depth, id, t);
-    // ray.origin.show();
-    // ray.direction.show();
-
-    // if (obj.emission.norm() > eps) {
-    //     fprintf(stderr, "\rfind");
-    // }
-
     if (++depth > 5) {
         // if (urand() > 0.5)
         return obj.emission;
@@ -116,7 +86,7 @@ Color Scene::radiance(const Ray& ray, int depth, Vec absorp) {
     // reflection
     if (obj.surf_refl == SurfaceType::NORMAL) {
         double n_rel = is_in ? obj.n_refr : 1.0 / obj.n_refr;
-        double R = Fresnel_reflection(n_rel, cos_i);
+        double R = obj.n_refr > 0 ? Fresnel_reflection(n_rel, cos_i) : -obj.n_refr;
         Vec new_direction = ray.direction + 2 * cos_i * eh;
         light += R * obj.color.mult(radiance(Ray(new_origin, new_direction), depth, absorp));
     } else if (obj.surf_refl == SurfaceType::DIFFUSE) {
@@ -213,6 +183,7 @@ int Scene::render() {
     // canvas
     canvas = std::vector<std::vector<Color>>(width, std::vector<Color>(height, Color()));
     int total_grid = grid[0] * grid[1];
+    int samples = samples_per_pixel / total_grid;
 
     // default camera setup
     Vec cam_x = Vec(fov / height);
@@ -222,13 +193,13 @@ int Scene::render() {
 #pragma omp parallel for ordered schedule(dynamic, 1)   
     for (int y = 0; y < height; ++y) {
         // if (y % (height / 50) == 0) {
-        fprintf(stderr, "\rRendering (%d spp): %4.2f%%", samples_per_pixel * total_grid, 100.0 * y / height);
+        fprintf(stderr, "\rRendering (%d spp): %4.2f%%", samples * total_grid, 100.0 * y / height);
         // }
         for (int x = 0; x < width; ++x) {
             Color temp_color = Color();
             for (int sy = 0; sy < grid[1]; ++sy) {
                 for (int sx = 0; sx < grid[0]; ++sx) {
-                    for (int samp = 0; samp < samples_per_pixel; ++samp) {
+                    for (int samp = 0; samp < samples; ++samp) {
                         // tent filter
                         double rand;
                         rand = urand() * 2;
@@ -241,7 +212,7 @@ int Scene::render() {
                                     + camera.direction;
                         // dir.show();
                         
-                        temp_color += radiance(Ray(camera.origin + camera_length * dir, dir), 0, air_absorp) * (1.0 / samples_per_pixel);
+                        temp_color += radiance(Ray(camera.origin + camera_length * dir, dir), 0, air_absorp) * (1.0 / samples);
                     }
                     // temp_color.show();
                     canvas[x][y] += temp_color / total_grid;
@@ -369,7 +340,6 @@ void Scene::load_yaml(std::string yaml_file/* ="config.yaml" */) {
     
     // samples
     samples_per_pixel = config["samples_per_pixel"] ? config["samples_per_pixel"].as<size_t>() : 1;
-    samples_per_pixel /= grid[0] * grid[1];
 
     // canvas
     width = config["width"] ? config["width"].as<size_t>() : 1024;
