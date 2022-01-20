@@ -31,6 +31,7 @@ public:
 
     std::vector<Sphere> spheres;
     std::vector<std::vector<Color>> canvas;
+    std::vector<double> canvas_raw;
 
     std::string image_name = "image";
 
@@ -51,6 +52,7 @@ public:
     Scene(const Ray& cam_, double cam_l_, size_t w_=1024, size_t h_=768, double fov_=0.5135);
 
     int render();
+    int render_raw(int xmin, int xmax, int ymin, int ymax);
 
     void load_yaml(std::string yaml_file="config.yaml");
     void save_ppm(std::string img_file="image.ppm");

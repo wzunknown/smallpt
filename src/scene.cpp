@@ -162,6 +162,53 @@ Color Scene::radiance(const Ray& ray, int depth, Vec absorp) {
 }
 
 
+int Scene::render_raw(int xmin, int xmax, int ymin, int ymax) {
+    // canvas
+    canvas = std::vector<std::vector<Color>>(width, std::vector<Color>(height, Color()));
+    int total_grid = grid[0] * grid[1];
+
+    // default camera setup
+    Vec cam_x = Vec(fov / height);
+    Vec cam_y = (cam_x % camera.direction).normalize() * fov / height;
+
+    // Monte Carlo process
+#pragma omp parallel for ordered schedule(dynamic, 1)   
+    for (int y = ymin; y < ymax; ++y) {
+        // if (y % (height / 50) == 0) {
+        fprintf(stderr, "\rRendering (%d spp): %4.2f%%", samples_per_pixel * total_grid, 100.0 * y / height);
+        // }
+        for (int x = xmin; x < xmax; ++x) {
+            Color temp_color = Color();
+            for (int sy = 0; sy < grid[1]; ++sy) {
+                for (int sx = 0; sx < grid[0]; ++sx) {
+                    for (int samp = 0; samp < samples_per_pixel; ++samp) {
+                        // tent filter
+                        double rand;
+                        rand = urand() * 2;
+                        double dx = rand < 1 ? std::sqrt(rand) - 1 : 1 - std::sqrt(2 - rand);
+                        rand = urand() * 2;
+                        double dy = rand < 1 ? std::sqrt(rand) - 1 : 1 - std::sqrt(2 - rand);
+
+                        Vec dir = cam_x * (x + (sx + dx  - grid[0] / 2.) / 2. - width / 2.)
+                                    + cam_y * (y + (sy + dy - grid[1] / 2.) / 2. - height / 2.)
+                                    + camera.direction;
+                        // dir.show();
+                        
+                        temp_color += radiance(Ray(camera.origin + camera_length * dir, dir), 0, air_absorp) * (1.0 / samples_per_pixel);
+                    }
+                    // temp_color.show();
+                    canvas[x][y] += temp_color / total_grid;
+                }
+            }
+            // for (int idx = 0; idx < 3; ++idx) {
+            //     canvas[x][y][idx] *= exp(-camera_length * air_absorp[idx]);
+            // }
+        }
+    }
+    return 0;    
+}
+
+
 int Scene::render() {
     // canvas
     canvas = std::vector<std::vector<Color>>(width, std::vector<Color>(height, Color()));
@@ -172,7 +219,7 @@ int Scene::render() {
     Vec cam_y = (cam_x % camera.direction).normalize() * fov / height;
 
     // Monte Carlo process
-#pragma omp parallel for schedule(dynamic, 1)   
+#pragma omp parallel for ordered schedule(dynamic, 1)   
     for (int y = 0; y < height; ++y) {
         // if (y % (height / 50) == 0) {
         fprintf(stderr, "\rRendering (%d spp): %4.2f%%", samples_per_pixel * total_grid, 100.0 * y / height);

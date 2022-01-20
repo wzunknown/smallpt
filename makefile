@@ -9,15 +9,15 @@ $(info Checking OS: $(detected_OS))
 ifeq ($(detected_OS),Darwin)
 	LLVM_DIR=/opt/homebrew/opt/llvm
 	CXX=$(LLVM_DIR)/bin/clang++
-	CXXFLAGS=-I$(LLVM_DIR)/include -O2 -fopenmp 
-	LDFLAGS=-L$(LLVM_DIR)/lib -lyaml-cpp
+	CXXFLAGS=-I$(LLVM_DIR)/include -I/opt/homebrew/Cellar/yaml-cpp/0.6.3_1/include -O2 -fopenmp 
+	LDFLAGS=-lyaml-cpp -L/opt/homebrew/Cellar/yaml-cpp/0.6.3_1/lib -L$(LLVM_DIR)/lib
 else ifeq ($(detected_OS),Linux)
 	CXX=g++
 	CXXFLAGS=-O2 -fopenmp
 	LDFLAGS=-lyaml-cpp
 endif
 
-CPPFLAGS=-Iinclude -std=c++17
+CPPFLAGS=-Iinclude -std=c++11
 
 SRC_DIR=src
 OBJ_DIR=obj
@@ -42,10 +42,10 @@ demo: demo.o $(OBJ_DIR)/vector.o $(OBJ_DIR)/sphere.o $(OBJ_DIR)/color.o
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 %.o: %.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@ $(LDFLAGS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@ $(LDFLAGS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 $(OBJ_DIR):
 	mkdir -p $@
