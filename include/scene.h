@@ -20,13 +20,13 @@ private:
 
 
     Color radiance(const Ray& ray, int depth, Vec absorp);
-    bool intersect_spheres(const Ray& ray, double& t, size_t& id);
+    bool intersect_spheres(const Ray& ray, double& t, int& id);
 
 public:
     static constexpr double eps = 1e-7;
 
-    size_t width = 1024;
-    size_t height = 768;
+    int width = 1024;
+    int height = 768;
 
 
     std::vector<Sphere> spheres;
@@ -40,15 +40,15 @@ public:
     double camera_length = 140.;
     double fov = 0.5135;
 
-    size_t samples_per_pixel=1;
+    int samples_per_pixel=1;
 
-    std::vector<size_t> grid {2, 2};
+    std::vector<int> grid {2, 2};
 
     // load default.yaml
     Scene(std::string yaml_file="default.yaml");
 
     // create new Scene
-    Scene(const Ray& cam_, double cam_l_, size_t w_=1024, size_t h_=768, double fov_=0.5135);
+    Scene(const Ray& cam_, double cam_l_, int w_=1024, int h_=768, double fov_=0.5135);
 
     int render();
     int render_raw(int xmin, int xmax, int ymin, int ymax, std::vector<double>& data_raw);

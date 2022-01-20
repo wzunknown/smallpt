@@ -65,5 +65,6 @@ else()
 endif()
 
 add_subdirectory(app)
+add_subdirectory(mpi EXCLUDE_FROM_ALL)
 
 

@@ -37,17 +37,17 @@ Scene::Scene(std::string yaml_file/* ="default.yaml" */) {
 }
 
 
-Scene::Scene(const Ray& cam_, double cam_l_, size_t w_/* =1024 */, size_t h_/* =768 */, double fov_/* =0.5135 */)
+Scene::Scene(const Ray& cam_, double cam_l_, int w_/* =1024 */, int h_/* =768 */, double fov_/* =0.5135 */)
     : camera(cam_), camera_length(cam_l_), width(w_), height(h_), fov(fov_)
 {
 
 }
 
 
-bool Scene::intersect_spheres(const Ray& ray, double& t, size_t& id) {
+bool Scene::intersect_spheres(const Ray& ray, double& t, int& id) {
     t = std::numeric_limits<double>::infinity();
     id = -1;
-    for (size_t i = 0; i < spheres.size(); ++i) {
+    for (int i = 0; i < spheres.size(); ++i) {
         const auto& sph = spheres[i];
         double d = sph.intersect(ray);
         if (d < t) {
@@ -62,7 +62,7 @@ bool Scene::intersect_spheres(const Ray& ray, double& t, size_t& id) {
 
 Color Scene::radiance(const Ray& ray, int depth, Vec absorp) {
     double t; // distance to intersection
-    size_t id;
+    int id;
     if (!intersect_spheres(ray, t, id)) { // no intersect
         return Color(); // return black
     }
@@ -334,16 +334,16 @@ void Scene::load_yaml(std::string yaml_file/* ="config.yaml" */) {
 
     // grid
     if (config["grid"]) {
-        grid[0] = config["grid"][0].as<size_t>();
-        grid[1] = config["grid"][1].as<size_t>();
+        grid[0] = config["grid"][0].as<int>();
+        grid[1] = config["grid"][1].as<int>();
     }
     
     // samples
-    samples_per_pixel = config["samples_per_pixel"] ? config["samples_per_pixel"].as<size_t>() : 1;
+    samples_per_pixel = config["samples_per_pixel"] ? config["samples_per_pixel"].as<int>() : 1;
 
     // canvas
-    width = config["width"] ? config["width"].as<size_t>() : 1024;
-    height = config["height"] ? config["height"].as<size_t>() : 768;
+    width = config["width"] ? config["width"].as<int>() : 1024;
+    height = config["height"] ? config["height"].as<int>() : 768;
 
     // camera
     if (config["camera"]) {
