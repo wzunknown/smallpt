@@ -14,6 +14,9 @@ cmake -DBUILD_SHARED_LIBS=ON .. && make
 ./mysmallpt path_to_config.yaml
 ```
 
-50000spp:
+## gallery
+10w spp:
 
-<img src="img/image50000.png" width="512">
+<img src="img/image10w.png" width="512">
+<img src="img/s1.png" width="512">
+<img src="img/s2.png" width="512">
