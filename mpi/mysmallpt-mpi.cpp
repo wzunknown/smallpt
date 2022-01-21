@@ -34,6 +34,9 @@ int main(int argc, char* argv[]) {
     MPI_Get_processor_name(processor_name, &namelen);
 
     Scene sc = Scene(argv[1]);
+    if (argc == 3) {
+        sc.samples_per_pixel = atoi(argv[2]);
+    }
     int master_id = 0;
     int ymin, ymax;
     
