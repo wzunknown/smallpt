@@ -4,14 +4,30 @@
 #include <algorithm>
 #include <mpi.h>
 #include <omp.h>
+#include <time.h>
+#include <stdarg.h>
+#include <string>
 
 #define FROM_MASTER 1
 #define FROM_WORKER 2
 
-int main(int argc, char* argv[]) {
-    int numprocs, rank, namelen;
-    char processor_name[MPI_MAX_PROCESSOR_NAME];
+int rank, numprocs;
+char processor_name[MPI_MAX_PROCESSOR_NAME];
 
+void log_info(const char* format,...) {
+    char time_buf[256];
+    time_t curr_time = time(0);
+    strftime(time_buf, sizeof(time_buf), "%d-%H:%M:%S", localtime(&curr_time));
+    printf("%s [%15.15s:%2d/%2d] ", time_buf, processor_name, rank, numprocs);
+    va_list argptr;
+    va_start(argptr, format);
+    vfprintf(stdout, format, argptr);
+    va_end(argptr);
+    printf("\n"); 
+}
+
+int main(int argc, char* argv[]) {
+    int namelen;
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -37,13 +53,11 @@ int main(int argc, char* argv[]) {
         MPI_Recv(&ymax, 1, MPI_INT, master_id, FROM_MASTER, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 
-    fprintf(stderr, "[%10.10s:%2d/%2d] Get job from master node, ymin: %d, ymax: %d\n",
-                processor_name, rank, numprocs, ymin, ymax);
+    log_info("Get job from master node, ymin: %d, ymax: %d", ymin, ymax);
 
     std::vector<double> data_raw((ymax - ymin) * sc.width * 3, 0.0);
     sc.render_raw(0, sc.width, ymin, ymax, data_raw);
-    fprintf(stderr, "[%10.10s:%2d/%2d] Finish job ymin: %d, ymax: %d\n",
-                    processor_name, rank, numprocs, ymin, ymax);
+    log_info("Finish job ymin: %d, ymax: %d", ymin, ymax);
     // collect result
     if (rank == master_id) {
         // fprintf(stderr, "")
