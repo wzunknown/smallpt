@@ -33,6 +33,8 @@ int main(int argc, char* argv[]) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Get_processor_name(processor_name, &namelen);
 
+    log_info("load config: %s", argv[1]);
+
     Scene sc = Scene(argv[1]);
     if (argc == 3) {
         sc.samples_per_pixel = atoi(argv[2]);
@@ -73,10 +75,11 @@ int main(int argc, char* argv[]) {
         // save ppm
         std::string ppm_fname = std::string(argv[1]);
         size_t start = ppm_fname.find_last_of("/");
-        start = start == std::string::npos? 0 : start;
+        start = start == std::string::npos? 0 : start + 1;
         size_t end = ppm_fname.find_last_of(".");
         end = end == std::string::npos? ppm_fname.size() : end;
         ppm_fname = ppm_fname.substr(start, end - start) + ".ppm";
+        log_info("write to ppm: %s", ppm_fname.c_str());
         FILE* fp = fopen(ppm_fname.c_str(), "w");
         fprintf(fp, "P3\n%d %d\n%d\n", sc.width, sc.height, 255);
         for (int y = sc.height - 1; y >= 0; --y) {
