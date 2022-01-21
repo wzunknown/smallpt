@@ -1,0 +1,42 @@
+samples_per_pixel: 100
+
+width: 1024
+height: 768
+
+camera:
+  position: [50, 45, 280.6]
+  direction: [0, -0.04, -1]
+  length: 140
+  fov: 0.5135
+
+air_absorption: [0, 0, 0]
+
+grid: [2, 2]
+
+spheres:
+  - name: "bottom"
+    radius: 100000
+    center: [50, 100000, 78]
+    emission: [0,0,0]
+    color: [0.543, 0.571, 0.622]
+    reflection: "diffuse"
+    transmission: "none"
+
+  - name: "glass"
+    radius: 10
+    center: [50, 30, 78]
+    emission: [0,0,0]
+    color: [1,1,1]
+    reflection: "normal"
+    transmission: "normal"
+    refractive_index: 1.5
+    absorption: [0.01, 0.01, 0.01]
+
+  - name: "light"
+    radius: 5
+    center: [50, 70, 78]
+    emission: [15,15,15]
+    color: [0,0,0]
+    reflection: "diffuse"
+    transmission: "none"
+
