@@ -71,7 +71,12 @@ int main(int argc, char* argv[]) {
             MPI_Recv(&data_raw[ymin * sc.width * 3], (ymax - ymin) * sc.width * 3, MPI_DOUBLE, id, FROM_WORKER, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
         // save ppm
-        std::string ppm_fname = std::string(argv[1]) + ".ppm";
+        std::string ppm_fname = std::string(argv[1]);
+        size_t start = ppm_fname.find_last_of("/");
+        start = start == std::string::npos? 0 : start;
+        size_t end = ppm_fname.find_last_of(".");
+        end = end == std::string::npos? ppm_fname.size() : end;
+        ppm_fname = ppm_fname.substr(start, end - start) + ".ppm";
         FILE* fp = fopen(ppm_fname.c_str(), "w");
         fprintf(fp, "P3\n%d %d\n%d\n", sc.width, sc.height, 255);
         for (int y = sc.height - 1; y >= 0; --y) {
