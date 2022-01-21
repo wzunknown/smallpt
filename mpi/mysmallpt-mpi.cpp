@@ -71,7 +71,8 @@ int main(int argc, char* argv[]) {
             MPI_Recv(&data_raw[ymin * sc.width * 3], (ymax - ymin) * sc.width * 3, MPI_DOUBLE, id, FROM_WORKER, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
         // save ppm
-        FILE* fp = fopen("image.ppm", "w");
+        std::string ppm_fname = std::string(argv[1]) + ".ppm";
+        FILE* fp = fopen(ppm_fname.c_str(), "w");
         fprintf(fp, "P3\n%d %d\n%d\n", sc.width, sc.height, 255);
         for (int y = sc.height - 1; y >= 0; --y) {
             for (int x = 0; x < sc.width; ++x) {
