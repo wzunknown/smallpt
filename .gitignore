@@ -10,3 +10,4 @@ core
 /demo
 /build
 !/img/*
+.DS_Store
